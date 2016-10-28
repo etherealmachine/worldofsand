@@ -1,0 +1,106 @@
+Initial calculation done but slow, needs to be offloaded into WebWorker.
+First pass:
+	For each "column", go from top to bottom and track a pressure variable.
+	Pressure increases if water is present, resets to 0 if cell is empty.
+	Save cell pressure in a pressure grid as you go.
+
+Example - Keep in mind air has a pressure of 1.
+
+Contents Pressure
+│.│      │1│
+│.│      │2│  
+│.└─┘.│  │3└─┘1│
+│.....│  │40002│
+└─────┘  └─────┘
+
+Equilibrium:
+│ │      │ │
+│ │      │ │   
+│.└─┘.│  │1└─┘1│
+│.....│  │22222│
+└─────┘  └─────┘
+
+Propagate:
+│1│
+│2│  
+│3└─┘4│
+│44444│
+└─────┘
+
+Update:
+│.│
+│.│  .
+│.└─┘ │
+│.....│
+└─────┘
+
+Calculate:
+│1│
+│2│  1
+│3└─┘0│
+│40000│
+└─────┘
+
+Propagate:
+│1│
+│2│  1
+│3└─┘0│
+│44444│
+└─────┘
+
+Update:
+│.│
+│.│  .
+│.└─┘.│
+│.... │
+└─────┘
+
+Calculate/Propagate:
+│1│
+│2│  1
+│3└─┘2│
+│44440│
+└─────┘
+
+Update:
+│.│
+│.│   .
+│.└─┘.│
+│... .│
+└─────┘
+
+Calculate/Propagate:
+│1│
+│2│   1
+│3└─┘1│
+│44402│
+└─────┘
+
+Update:
+│.│
+│.│    .
+│.└─┘.│
+│.. ..│
+└─────┘
+
+Calculate/Propagate:
+│1│
+│2│    1
+│3└─┘1│
+│44022│
+└─────┘
+
+...
+Update:
+│ │
+│ │    
+│.└─┘.│
+│.....│
+└─────┘
+
+Propagate:
+Pressure evenly spreads along row - connected elements in a row should have the
+same pressure.
+
+Update:
+Liquid can move up if its pressure is greater than the pressure above it.

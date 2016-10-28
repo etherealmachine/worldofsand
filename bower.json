@@ -1,0 +1,25 @@
+{
+  "name": "worldofsand",
+  "description": "",
+  "main": "",
+  "authors": [
+    "etherealmachine@gmail.com"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "app-elements": "^0.10.0",
+    "iron-elements": "^1.0.10",
+    "paper-elements": "^1.0.7",
+    "polymer": "Polymer/polymer#^1.4.0",
+    "polymerfire": "firebase/polymerfire#^0.9.5",
+    "polymer-ts": "^0.1.28"
+  }
+}

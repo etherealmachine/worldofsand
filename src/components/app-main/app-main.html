@@ -1,0 +1,62 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../../bower_components/iron-localstorage/iron-localstorage.html">
+
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../../bower_components/paper-slider/paper-slider.html">
+
+<dom-module id="app-main">
+	<template>
+		<style>
+			#canvas {
+				float: left;
+			}
+			#controls {
+				float: left;
+				padding-left: 10px;
+			}
+		</style>
+		<style include="iron-flex iron-flex-alignment"></style>
+		<iron-localstorage
+				id="savedGrid"
+				name="savedGrid"
+				value="{{grid}}"
+				on-iron-localstorage-load-empty="initializeGrid"
+				auto-save-disabled>
+		</iron-localstorage>
+		<canvas id="canvas" width="800" height="600"></canvas>
+		<div id="controls" class="layout vertical start-justified">
+			<paper-dropdown-menu label="Materials">
+				<paper-listbox
+						class="dropdown-content"
+						attr-for-selected="material-index"
+						selected="{{selection}}">
+					<paper-item material-index="0">Empty</paper-item>
+					<paper-item material-index="1">Stone</paper-item>
+					<paper-item material-index="2">Water</paper-item>
+					<paper-item material-index="3">Fire</paper-item>
+					<paper-item material-index="8">Plant</paper-item>
+				</paper-listbox>
+			</paper-dropdown-menu>
+			<label for="brushSize">Brush Size</label>
+			<paper-slider
+					id="brushSize"
+					min="1"
+					max="100"
+					value="{{brushSize}}"
+					pin>
+			</paper-slider>
+			<div>
+				<p>FPS: [[fps]]</p>
+				<p>TPS: [[tps]]</p>
+			</div>
+			<div>
+				<paper-button on-tap="onClearClicked" raised>Clear</paper-button>
+			</div>
+		</div>
+	</template>
+</dom-module>
