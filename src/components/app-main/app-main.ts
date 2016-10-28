@@ -23,6 +23,21 @@ const MaterialColors : { [key:number] : [number, number, number] } = {
 	8: [0, 200, 10]     // Plant
 };
 
+enum BrushType {
+	Pen = 0,
+	Brush,
+	SnapToGrid
+}
+
+interface StrokeEvent {
+	x: number;
+	y: number;
+	selection: Material;
+	brushSize: number;
+	brushType: number;
+	gridSize: number;
+}
+
 @component('app-main')
 class AppMain extends polymer.Base {
 
@@ -35,7 +50,7 @@ class AppMain extends polymer.Base {
 	tick: number;
 	tickTime: number;
 	worker: Worker;
-	events: Array<Event>;
+	events: Array<CustomEvent>;
 	mousePosition: MouseEvent;
 
 	@property({type: Array})
@@ -44,8 +59,14 @@ class AppMain extends polymer.Base {
 	@property({ type: Number, value: Material.Water })
 	selection: Material;
 
-	@property({ type: Number })
+	@property({ type: Number, value: 20 })
 	brushSize: number;
+
+	@property({ type: BrushType, value: BrushType.Pen })
+	brushType: BrushType;
+
+	@property({ type: Number, value: 10 })
+	gridSize: number;
 
 	@property({ type: Number, value: 0 })
 	fps: number;
@@ -86,21 +107,8 @@ class AppMain extends polymer.Base {
 		this.worker.addEventListener('message', (e: MessageEvent) => {
 			this.grid = e.data.grid;
 			this.events.forEach(event => {
-				if (event.type === 'mousemove') {
-					for (let yOff = -this.brushSize; yOff < this.brushSize; yOff++) {
-						for (let xOff = -this.brushSize; xOff < this.brushSize; xOff++) {
-							const x = this.mousePosition.layerX + xOff;
-							const y = this.mousePosition.layerY + yOff;
-							const dist = Math.sqrt(
-								Math.pow(x - this.mousePosition.layerX, 2) +
-								Math.pow(y - this.mousePosition.layerY, 2));
-						  const r = dist / this.brushSize;
-							if (Math.random() > 0.5 && Math.random() >= r) {
-								const i = y * this.width + x;
-								this.grid[i] = this.selection;
-							}
-						}
-					}
+				if (event.type === 'stroke') {
+					this.applyStroke(event.detail);
 				} else if (event.type === 'cleargrid') {
 					this.initializeGrid();
 				}
@@ -147,27 +155,19 @@ class AppMain extends polymer.Base {
 				this.img.data[i + 1] = color[1];
 				this.img.data[i + 2] = color[2];
 				this.img.data[i + 3] = 255;
+				if (this.brushType == BrushType.SnapToGrid) {
+					if (x % this.gridSize === 0 || y % this.gridSize === 0) {
+						this.img.data[i] = 0;
+						this.img.data[i + 1] = 0;
+						this.img.data[i + 2] = 0;
+						this.img.data[i + 3] = 150;
+					}
+				}
 			}
 		}
 
 		if (this.mousePosition) {
-			for (let yOff = -this.brushSize; yOff < this.brushSize; yOff++) {
-				for (let xOff = -this.brushSize; xOff < this.brushSize; xOff++) {
-					const x = this.mousePosition.layerX + xOff;
-					const y = this.mousePosition.layerY + yOff;
-					const dist = Math.sqrt(
-						Math.pow(x - this.mousePosition.layerX, 2) +
-						Math.pow(y - this.mousePosition.layerY, 2));
-					if (dist < this.brushSize) {
-						const i = (y * this.width + x) * 4;
-						const color = MaterialColors[this.selection];
-						this.img.data[i] = color[0];
-						this.img.data[i + 1] = color[1];
-						this.img.data[i + 2] = color[2];
-						this.img.data[i + 3] = 50;
-					}
-				}
-			}
+			// Preview stroke
 		}
 
 		this.ctx.clearRect(0, 0, this.img.width, this.img.height);
@@ -176,16 +176,56 @@ class AppMain extends polymer.Base {
 		window.requestAnimationFrame(this.redraw.bind(this));
 	}
 
+	applyStroke(event: StrokeEvent) {
+		if (event.brushType == BrushType.Pen || event.brushType == BrushType.Brush) {
+			for (let xOff = -event.brushSize; xOff < event.brushSize; xOff++) {
+				for (let yOff = -event.brushSize; yOff < event.brushSize; yOff++) {
+					const x = event.x + xOff;
+					const y = event.y + yOff;
+					const dist = Math.sqrt(
+						Math.pow(x - event.x, 2) +
+						Math.pow(y - event.y, 2));
+				  let fill = dist <= event.brushSize;
+					if (event.brushType == BrushType.Brush) {
+						fill = Math.random() <= 1 - (dist / event.brushSize);
+					}	
+					if (fill) {
+						const i = y * this.width + x;
+						this.grid[i] = event.selection;
+					}
+				}
+			}
+		} else if (event.brushType == BrushType.SnapToGrid) {
+			const gridX = Math.floor(event.x / event.gridSize);
+			const gridY = Math.floor(event.y / event.gridSize);
+			for (let xOff = 0; xOff < event.gridSize; xOff++) {
+				for (let yOff = 0; yOff < event.gridSize; yOff++) {
+					const x = gridX * event.gridSize + xOff;
+					const y = gridY * event.gridSize + yOff;
+					const i = y * this.width + x;
+					this.grid[i] = event.selection;
+				}
+			}
+		}
+	}
+
 	onMouseMove(event: MouseEvent) {
 		event.preventDefault();
 		if (event.buttons) {
-			this.events.push(event);
+			this.events.push(new CustomEvent('stroke', { detail: <StrokeEvent>{
+				x: event.layerX,
+				y: event.layerY,
+				selection: this.selection,
+				brushSize: this.brushSize,
+				brushType: this.brushType,
+				gridSize: this.gridSize
+			}}));
 		}
 		this.mousePosition = event;
 	}
 
 	onClearClicked(e: Event) {
-		this.events.push(new Event('cleargrid'));
+		this.events.push(new CustomEvent('cleargrid'));
 	}
 
 }

@@ -50,7 +50,7 @@ gulp.task('clean', () => {
 });
 
 gulp.task('watch', () => {
-	return gulp.watch(['src/**/*.ts'], ['lint', 'compile']);
+	return gulp.watch(['src/**/*.ts'], ['compile']);
 });
 
 gulp.task('serve', ['compile', 'watch'], () => {
@@ -59,6 +59,7 @@ gulp.task('serve', ['compile', 'watch'], () => {
     port: 3000,
     files: [
 			'src/**',
+			'build/**',
 			'bower_components/**'
 		],
     injectChanges: true,
