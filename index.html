@@ -22699,7 +22699,7 @@ var AppMain = (function (_super) {
         this.tickTime = Date.now();
         window.requestAnimationFrame(this.redraw.bind(this));
         this.events = [];
-        this.worker = new Worker('/webworkers/update.js');
+        this.worker = new Worker('webworkers/update.js');
         this.worker.addEventListener('message', function (e) {
             _this.grid = e.data.grid;
             _this.events.forEach(function (event) {
