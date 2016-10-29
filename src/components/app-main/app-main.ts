@@ -103,7 +103,7 @@ class AppMain extends polymer.Base {
 		window.requestAnimationFrame(this.redraw.bind(this));
 
 		this.events = [];
-		this.worker = new Worker('/webworkers/update.js');
+		this.worker = new Worker('webworkers/update.js');
 		this.worker.addEventListener('message', (e: MessageEvent) => {
 			this.grid = e.data.grid;
 			this.events.forEach(event => {
